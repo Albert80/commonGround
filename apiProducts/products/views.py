@@ -13,23 +13,20 @@ def products_process(request):
   if request.method == 'GET':
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
   elif request.method == 'POST':
-    errors = []
-    for product in request.data['products']:
-      serializer = ProductSerializer(data=product)
+    try:
+      serializer = ProductSerializer(data=request.data['products'], many=True)
       if serializer.is_valid():
         serializer.save()
+        return Response({"status": "OK"}, status=status.HTTP_200_OK)
       elif serializer.errors:
         res = {
           "status": "ERROR",
-          "products_report": [
-            serializer.errors
-          ],
+          "products_report": serializer.errors,
           "number_of_products_unable_to_parse": len(serializer.errors)
         }
         return Response(res, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-    
-    return Response({ "status": "OK"}, status=status.HTTP_200_OK) 
-      
+    except Exception:
+      print(Exception)
